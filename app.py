@@ -1,12 +1,9 @@
 from flask import Flask, render_template, request, send_file
 import os
-import subprocess
-import sys
 from yt_dlp import YoutubeDL
 
 app = Flask(__name__)
 
-# --- Carpeta donde se guardarán las descargas ---
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
@@ -46,7 +43,6 @@ def descargar():
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
 
-        # si es mp3, yt-dlp cambia la extensión
         if formato == "mp3":
             filename = os.path.splitext(filename)[0] + ".mp3"
 
@@ -56,6 +52,6 @@ def descargar():
         return f"❌ Error: {e}"
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-
+    # Railway expone el puerto en la variable de entorno PORT
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
