@@ -1,66 +1,91 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Descargador de YouTube</title>
+    <title>Descargar YouTube</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f9;
-            display: flex;
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
-        .container {
+        #modal-content {
             background: #fff;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            width: 400px;
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
+            width: 300px;
         }
-        input[type="text"] {
-            width: 95%;
-            padding: 8px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
         }
-        .options {
-            margin: 15px 0;
-            text-align: left;
-        }
-        button {
-            background: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #45a049;
-        }
+        @keyframes spin {100% {transform: rotate(360deg);}}
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Descargador de YouTube</h2>
-        <form action="https://tu-app.onrender.com/descargar" method="post" onsubmit="mostrarMensaje()">
-            <label for="url">Pega la URL de YouTube:</label>
-            <input type="text" id="url" name="url" required placeholder="https://www.youtube.com/...">
+    <h2>Descargar de YouTube</h2>
+    <form id="downloadForm">
+        <input type="text" name="url" placeholder="Pega el enlace de YouTube" required><br><br>
+        <label><input type="radio" name="format" value="mp3" checked> MP3</label>
+        <label><input type="radio" name="format" value="mp4"> MP4</label><br><br>
+        <button type="submit">Descargar</button>
+    </form>
 
-            <div class="options">
-                <label><input type="radio" name="formato" value="mp4" checked> 📹 MP4 (video máxima calidad)</label><br>
-                <label><input type="radio" name="formato" value="mp3"> 🎵 MP3 (audio máxima calidad)</label>
-            </div>
-
-            <button type="submit">⬇️ Descargar</button>
-        </form>
+    <div id="modal">
+        <div id="modal-content">
+            <h3 id="status">Descargando...</h3>
+            <div class="loader"></div>
+            <p id="progress">0%</p>
+        </div>
     </div>
+
+    <script>
+        const socket = io();
+        const modal = document.getElementById("modal");
+        const statusText = document.getElementById("status");
+        const progressText = document.getElementById("progress");
+
+        // Recibir progreso en tiempo real
+        socket.on("progress", (data) => {
+            progressText.innerText = data.progress + "%";
+            if (data.status === "finished") {
+                statusText.innerText = "Descarga exitosa ✅";
+            }
+        });
+
+        // Evento del formulario
+        document.getElementById("downloadForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            modal.style.display = "flex";
+            statusText.innerText = "Descargando...";
+            progressText.innerText = "0%";
+
+            const formData = new FormData(this);
+            fetch("/download", { method: "POST", body: formData })
+                .then(resp => resp.blob())
+                .then(blob => {
+                    let url = window.URL.createObjectURL(blob);
+                    let a = document.createElement("a");
+                    a.href = url;
+                    a.download = formData.get("format") === "mp3" ? "audio.mp3" : "video.mp4";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                });
+        });
+    </script>
 </body>
 </html>
+
 
 
 
