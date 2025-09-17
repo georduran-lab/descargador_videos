@@ -1,24 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Descargar YouTube</title>
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { padding: 10px; margin: 5px; }
         #modal {
             display: none;
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
+            justify-content: center; align-items: center;
         }
         #modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
+            background: #fff; padding: 20px; border-radius: 10px;
+            text-align: center; width: 300px;
         }
         .loader {
             border: 6px solid #f3f3f3;
@@ -28,7 +26,7 @@
             animation: spin 1s linear infinite;
             margin: 10px auto;
         }
-        @keyframes spin {100% {transform: rotate(360deg);}}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -40,6 +38,7 @@
         <button type="submit">Descargar</button>
     </form>
 
+    <!-- Modal -->
     <div id="modal">
         <div id="modal-content">
             <h3 id="status">Descargando...</h3>
@@ -49,12 +48,12 @@
     </div>
 
     <script>
-        const socket = io();
+        const socket = io(); // Se conecta automáticamente al backend
         const modal = document.getElementById("modal");
         const statusText = document.getElementById("status");
         const progressText = document.getElementById("progress");
 
-        // Recibir progreso en tiempo real
+        // Escucha los eventos de progreso desde Flask-SocketIO
         socket.on("progress", (data) => {
             progressText.innerText = data.progress + "%";
             if (data.status === "finished") {
@@ -62,29 +61,48 @@
             }
         });
 
-        // Evento del formulario
+        // Manejar envío del formulario
         document.getElementById("downloadForm").addEventListener("submit", function(e) {
             e.preventDefault();
+
+            // Mostrar modal
             modal.style.display = "flex";
             statusText.innerText = "Descargando...";
             progressText.innerText = "0%";
 
             const formData = new FormData(this);
-            fetch("/download", { method: "POST", body: formData })
-                .then(resp => resp.blob())
-                .then(blob => {
-                    let url = window.URL.createObjectURL(blob);
-                    let a = document.createElement("a");
-                    a.href = url;
-                    a.download = formData.get("format") === "mp3" ? "audio.mp3" : "video.mp4";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                });
+
+            fetch("/download", {
+                method: "POST",
+                body: formData
+            })
+            .then(resp => {
+                if (!resp.ok) throw new Error("Error en el servidor");
+                return resp.blob();
+            })
+            .then(blob => {
+                // Descargar el archivo en el navegador
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = formData.get("format") === "mp3" ? "audio.mp3" : "video.mp4";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+                statusText.innerText = "Descarga completada ✅";
+            })
+            .catch(err => {
+                statusText.innerText = "❌ Error: " + err.message;
+                progressText.innerText = "0%";
+            });
         });
     </script>
 </body>
 </html>
+
+
 
 
 
