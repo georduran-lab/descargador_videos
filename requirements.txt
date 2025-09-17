@@ -1,3 +1,5 @@
 flask
-gunicorn
+flask-socketio
+eventlet
 yt-dlp
+gunicorn
