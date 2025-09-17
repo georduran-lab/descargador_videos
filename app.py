@@ -65,12 +65,12 @@ def download():
     else:
         filename = os.path.splitext(filename)[0] + ".mp4"
 
-    return send_file(filename, as_attachment=True)
-
+    return send_file(filename, as_attachment=True, download_name=os.path.basename(filename))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
+
 
 
 
