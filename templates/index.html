@@ -48,12 +48,11 @@
     </div>
 
     <script>
-        const socket = io(); // Se conecta automáticamente al backend
+        const socket = io(); 
         const modal = document.getElementById("modal");
         const statusText = document.getElementById("status");
         const progressText = document.getElementById("progress");
 
-        // Escucha los eventos de progreso desde Flask-SocketIO
         socket.on("progress", (data) => {
             progressText.innerText = data.progress + "%";
             if (data.status === "finished") {
@@ -61,27 +60,21 @@
             }
         });
 
-        // Manejar envío del formulario
         document.getElementById("downloadForm").addEventListener("submit", function(e) {
             e.preventDefault();
 
-            // Mostrar modal
             modal.style.display = "flex";
             statusText.innerText = "Descargando...";
             progressText.innerText = "0%";
 
             const formData = new FormData(this);
 
-            fetch("/download", {
-                method: "POST",
-                body: formData
-            })
+            fetch("/download", { method: "POST", body: formData })
             .then(resp => {
                 if (!resp.ok) throw new Error("Error en el servidor");
                 return resp.blob();
             })
             .then(blob => {
-                // Descargar el archivo en el navegador
                 let url = window.URL.createObjectURL(blob);
                 let a = document.createElement("a");
                 a.href = url;
@@ -101,11 +94,5 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
