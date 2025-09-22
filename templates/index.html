@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>🎥 Descargar YouTube 🔥</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+        {% if video_info and not video_info.error %}
+        <div class="background" style="background-image: url('{{ video_info.thumbnail }}');"></div>
+         {% endif %}
+      <h1>🎥 DESCARGAR VIDEOS DE YOUTUBE 🔥</h1>
+
+      <form method="POST" id="infoForm">
+        <div class="row">
+          <input type="text" name="url" id="url_input" placeholder="Pega aquí la URL de YouTube" value="{{ url or '' }}" required>
+          <button type="submit">Obtener información</button>
+        </div>
+      </form>
+
+      {% if video_info %}
+        {% if video_info.error %}
+          <p style="color:#ff6b6b; margin-top:12px;">{{ video_info.error }}</p>
+        {% else %}
+          <div class="info">
+            <img class="thumb" src="{{ video_info.thumbnail }}" alt="thumbnail">
+            <div class="meta">
+              <h2 style="margin:0 0 6px;">{{ video_info.title }}</h2>
+              <p id="author">©️ Autor: {{ video_info.author }}</p>
+              <p>👀 Vistas: {{ video_info.views }}</p>
+              <p>⏳ Duración: {{ video_info.length }}</p>
+              <p>📅 Publicado: {{ video_info.publish_date }}</p>
+
+              <div class="actions">
+                <!-- botones ahora llaman a JS -->
+                <input type="hidden" id="video_url" value="{{ video_info.url }}">
+                <button type="button" onclick="startDownload('mp4')">📹 Descargar MP4 ({{ video_info.video_quality }} • {{ video_info.video_size }})</button> <!--ESTO FUNCIONA -->
+                <button type="button" onclick="startDownload('mp3')">🎵 Descargar MP3 ({{ video_info.audio_quality }} • {{ video_info.audio_size }})</button> <!--ESTO FUNCIONA -->
+                <span class="small">Ruta de guardado: {{ downloads_path }}</span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+    <p id="footer-phrase">{{ phrase }}</p>
+  </div>
+  <div class="background"></div>
+  <!-- Overlay de progreso -->
+  <div id="overlay" class="overlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="spinner"></div>
+      <div style="font-weight:700;" id="modal-title">Preparando descarga...</div>
+
+      <div class="progressbar" aria-hidden="true">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+
+      <div class="percent" id="percent-text">0%</div>
+      <div class="status" id="status-text">Esperando...</div>
+      <button id="cancelBtn" style="display:none;" onclick="cancelDownload()">❌ Cancelar</button>
+    </div>
+  </div>
+<script src="script.js"></script>
+</body>
+</html>
 
