@@ -1,1 +1,308 @@
+:root { 
+  --accent:#e50914; /* color principal (rojo estilo YouTube) */
+  --bg:#0f1113d2;   /* color de fondo base */
+  --card: rgba(0,0,0,0.65); /* color de las tarjetas */
+}
 
+/* --- ESTILOS BASE --- */
+body {
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:#000000ec; /* fondo negro */
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+.wrap {
+  width:100%;
+  max-width:900px; /* ancho máximo de contenido */
+  position:relative;
+}
+
+.container {
+  position: relative;
+  z-index: 2; /* asegura que quede sobre el fondo */
+}
+
+/* --- FONDO DIFUMINADO --- */
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;     /* la imagen cubre toda la pantalla */
+  background-position: center;/* centrada */
+  filter: blur(15px) brightness(0.5); /* desenfoque + oscurecimiento */
+  z-index: -1; /* detrás del contenido */
+  opacity: 0;  /* inicia invisible */
+  animation: fadeInBg 2s ease forwards; /* animación de aparición */
+  overflow: hidden; /* oculta cualquier overflow de elementos hijos */
+
+  opacity: 0;
+  animation: fadeInBg 2s ease forwards, zoomBg 12s ease-in-out infinite; /* 👈 añadimos zoom */
+}
+
+@keyframes zoomBg {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); } /* 👈 crece 5% */
+  100% { transform: scale(1); }    /* 👈 vuelve al tamaño normal */
+}
+
+.background.active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 3s ease; /* transición al aplicar overlay */
+}
+body:hover .background::before {
+  background: rgba(0, 0, 0, 0.452); /* efecto al pasar el mouse */
+}
+@keyframes fadeInBg {
+  from { opacity: 0; } /* inicia transparente */
+  to { opacity: 1; }   /* aparece */
+}
+
+/* --- DESTELLOS ALEATORIOS --- */
+.flash {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%; /* forma circular */
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.8) 0%,   /* centro blanco translúcido */
+    rgba(255, 0, 0, 0.5) 30%,      /* rojo brillante */
+    rgba(139, 0, 0, 0.3) 60%,      /* rojo oscuro */
+    rgba(0, 0, 0, 0) 100%          /* se funde con el fondo */
+  );
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none; /* no bloquea clics */
+  animation: flashAnim 4s ease-out forwards; /* animación de aparición/desaparición */
+  z-index: -1; /* siempre detrás */
+  transition: all 1s ease;
+}
+@keyframes flashAnim {
+  0%   { opacity: 0; transform: scale(0.5); }  /* arranca pequeño y oculto */
+  20%  { opacity: 0.8; transform: scale(1); }  /* aparece */
+  80%  { opacity: 0.7; transform: scale(1.2);} /* se expande */
+  100% { opacity: 0; transform: scale(1.5);}   /* desaparece */
+}
+.flash.fade-out {
+  opacity: 0; /* se oculta */
+  width: 0;   /* se reduce a 0 */
+  height: 0;
+  background: none;
+}
+
+/* --- TARJETA PRINCIPAL --- */
+.card {
+  background: rgba(0, 0, 0, 0.541);
+  padding: 28px;
+  border-radius: 15px; /* bordes redondeados */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  z-index:2;
+}
+
+/* --- TIPOGRAFÍA ADAPTATIVA (RESPONSIVE) --- */
+h1 {
+  margin:0 0 14px;
+  font-size: clamp(1.4rem, 2vw + 1rem, 2rem);
+}
+h2 {
+  margin:0 0 6px;
+  font-size: clamp(1.1rem, 1.5vw + 0.8rem, 1.6rem);
+}
+p, button, input, .small {
+  font-size: clamp(0.85rem, 1vw + 0.6rem, 1rem);
+}
+
+/* --- FORMULARIO --- */
+.row {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap; /* se acomoda en varias líneas en pantallas pequeñas */
+}
+input[type="text"] {
+  flex:1;              /* ocupa todo el espacio disponible */
+  min-width:180px;     /* mínimo ancho */
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color:#fff;
+}
+
+/* --- BOTONES --- */
+button {
+  flex:1;
+  min-width:140px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:none;
+  background:var(--accent); /* rojo principal */
+  color:#fff;
+  cursor:pointer;
+  font-weight:600;
+  transition: all 0.3s ease; /* suaviza la animación */
+}
+
+button:hover {
+  filter: brightness(85%);   /* 👈 oscurece */
+  transform: scale(1.03);     /* 👈 crece */
+}
+
+/* --- INFO DEL VIDEO --- */
+.info {
+  margin-top:18px;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+}
+.thumb {
+  flex:0 0 200px; /* ancho fijo */
+  max-width:100%;
+  border-radius:10px;
+  box-shadow:0 8px 26px rgba(0,0,0,0.6);
+}
+.meta {
+  flex:1;
+  min-width:220px; /* asegura espacio mínimo */
+}
+.meta p { margin:6px 0; color:#d0d0d0; }
+
+.actions {
+  margin-top:12px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.small {
+  font-size:0.9rem;
+  padding:8px 10px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.03);
+}
+
+/* --- OVERLAY MODAL DE DESCARGA --- */
+.overlay {
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.55); /* fondo semitransparente */
+  z-index:999;
+  visibility:hidden;
+  opacity:0;
+  transition:opacity .25s, visibility .25s;
+}
+.overlay.show {
+  visibility:visible;
+  opacity:1; /* aparece */
+}
+.modal {
+  background:#0e1113;
+  padding:22px;
+  border-radius:12px;
+  width:90%;
+  max-width:480px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+  color:#fff;
+  text-align:center;
+}
+.spinner {
+  width:48px;
+  height:48px;
+  margin:8px auto 16px;
+  border-radius:50%;
+  border:4px solid rgba(255,255,255,0.08);
+  border-top-color:var(--accent); /* parte visible */
+  animation:spin 1s linear infinite; /* gira */
+}
+@keyframes spin { to{ transform:rotate(360deg);} }
+.progressbar {
+  height:12px;
+  background:rgba(255,255,255,0.06);
+  border-radius:10px;
+  overflow:hidden;
+  margin:10px 0;
+}
+.progress-fill {
+  height:100%;
+  width:0%; /* se llenará dinámicamente */
+  background:linear-gradient(90deg,var(--accent),#ff6b6b);
+  transition:width .2s ease;
+}
+.percent { font-weight:700; margin-top:6px; }
+.status { margin-top:8px; color:#cfcfcf; font-size:0.95rem; }
+
+/* --- FOOTER CON FRASE ALEATORIA --- */
+footer {
+  margin-top: 20px;
+  text-align: center;
+  font-style: italic;
+  color: #999;
+}
+
+#footer-phrase {
+  font-family: "Courier New", monospace;
+  display: inline-block;
+  border-right: 2px solid #999;
+  padding-right: 5px;
+  white-space: normal;   /* 🔥 permite saltos de línea */
+  word-break: break-word; /* rompe palabras largas si es necesario */
+  max-width: 90%;         /* limita ancho para forzar segunda línea */
+}
+
+/* --- RESPONSIVE (BREAKPOINTS) --- */
+@media (max-width:768px){
+  .wrap { padding:12px; }
+  .thumb { flex:0 0 160px; } /* achica miniatura */
+}
+@media (max-width:480px){
+  .info { flex-direction:column; align-items:center; } /* apila todo */
+  .thumb { width:100%; max-width:260px; align-items:center; }
+  .meta { text-align:center; }
+  .actions { flex-direction:column; }
+  button { width:100%; } /* botones ocupan todo */
+}
+
+/*AJUSTE BETA */
+
+/* Ajustes para pantallas grandes (PC) */
+@media (min-width: 1024px) {
+  .card {
+    max-width: 780px;   /* más angosta */
+    padding: 30px;      /* menos padding */
+    border-radius: 12px;
+  }
+}
+
+ .card h1 {
+    font-size: 24px;    /* título un poco más pequeño */
+  }
+
+  .card .info img.thumb {
+    width: 360px;       /* miniatura más chica */
+  }
+
+  .card .meta h2 {
+    font-size: 18px;    /* título del video reducido */
+  }
+
+  .card .meta p {
+    font-size: 15px;    /* textos más pequeños */
+  }
+
+  .card button {
+    padding: 8px 12px;  /* botones más compactos */
+    font-size: 14px;
+  }
