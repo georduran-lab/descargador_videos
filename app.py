@@ -115,7 +115,7 @@ def format_duration(seconds: int) -> str:
 tasks = {}  # task_id -> {'queue': Queue(), 'progress_map': {...}, 'total': int}
 
 # -------------------------
-# Rutas principales
+# Rutas principales - UPDATE
 # -------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -127,49 +127,65 @@ def index():
         url = clean_url(request.form.get("url"))
         try:
             yt = YouTube(url)
+
+            # Duración del video en formato hh:mm:ss
             duration = format_duration(yt.length)
 
-            # 🎥 Buscar siempre 1080p con el fps más alto disponible -UPDATE
+            # 🔹 Filtrar solo videos en 1080p y que tengan FPS válidos
+            video_streams = [
+                s for s in yt.streams.filter(adaptive=True, type="video", res="1080p")
+                if getattr(s, "fps", None) and s.fps >= 24
+            ]
+
+            # 🔹 Ordenar por FPS de mayor a menor
             video_streams = sorted(video_streams, key=lambda s: s.fps or 0, reverse=True)
 
-            audio_stream = (
-                yt.streams.filter(adaptive=True, type="audio")
-                .order_by("abr")
-                .desc()
-                .first()
-            )
+            # 🔹 Escoger el mejor stream de video (1080p, fps máximo)
+            video_stream = video_streams[0] if video_streams else None
 
-            best_audio = yt.streams.filter(only_audio=True).order_by("abr").desc().first()
+            # 🔹 Escoger el mejor audio disponible
+            audio_stream = yt.streams.filter(adaptive=True, type="audio").order_by("abr").desc().first()
 
-            if video_stream:
-                fps = getattr(video_stream, "fps", 0)
-                video_quality = f"1080p {fps}fps"
+            if video_stream and audio_stream:
+                fps = video_stream.fps or 0
+                resolution = video_stream.resolution or "N/A"
+
+                # Construcción de la etiqueta de calidad (ejemplo: 1080p60)
+                video_quality = f"{resolution}{fps if fps else ''}"
+
+                # Calcular tamaños aproximados
                 video_size = format_size((video_stream.filesize or 0) + (audio_stream.filesize or 0))
+                audio_quality = getattr(audio_stream, "abr", "unknown")
+                audio_size = format_size(audio_stream.filesize or 0)
+
+                # 🔹 Información final para la plantilla
+                video_info = {
+                    "title": yt.title,
+                    "author": yt.author,
+                    "views": format_views(yt.views),
+                    "length": duration,
+                    "thumbnail": yt.thumbnail_url,
+                    "url": url,
+                    "publish_date": yt.publish_date.strftime("%d/%m/%Y") if getattr(yt, "publish_date", None) else "",
+                    "video_quality": video_quality,
+                    "fps": fps,
+                    "video_size": video_size,
+                    "audio_quality": audio_quality,
+                    "audio_size": audio_size
+                }
             else:
-                video_quality = "No disponible en 1080p"
-                video_size = "N/A"
-
-            audio_quality = getattr(best_audio, "abr", "unknown")
-            audio_size = format_size(best_audio.filesize or 0)
-
-            video_info = {
-                "title": yt.title,
-                "author": yt.author,
-                "views": format_views(yt.views),
-                "length": duration,
-                "thumbnail": yt.thumbnail_url,
-                "url": url,
-                "publish_date": yt.publish_date.strftime("%d/%m/%Y") if getattr(yt, "publish_date", None) else "",
-                "video_quality": video_quality,
-                "video_size": video_size,
-                "audio_quality": audio_quality,
-                "audio_size": audio_size
-            }
+                video_info = {"error": "No se encontraron streams en 1080p con fps >= 24."}
 
         except Exception as e:
             video_info = {"error": f"No se pudo obtener la información: {e}"}
 
-    return render_template("index.html", video_info=video_info, url=url, downloads_path=DOWNLOADS_PATH, phrase=phrase)
+    return render_template(
+        "index.html",
+        video_info=video_info,
+        url=url,
+        downloads_path=DOWNLOADS_PATH,
+        phrase=phrase
+    )
 
 # -------------------------
 # Iniciar descarga: endpoints que lanzan hilo en background y devuelven task_id
@@ -487,6 +503,7 @@ if __name__ == "__main__":
     print("📂 Carpeta de descargas usada:", DOWNLOADS_PATH)
     # app.run(host="0.0.0.0", port=5000, debug=False)
     app = Flask(__name__)
+
 
 
 
