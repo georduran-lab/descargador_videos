@@ -490,5 +490,7 @@ def download_mp3():
 # -------------------------
 if __name__ == "__main__":
     print("📂 Carpeta de descargas usada:", DOWNLOADS_PATH)
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    # app.run(host="0.0.0.0", port=5000, debug=False)
+    app = Flask(__name__)
+
 
