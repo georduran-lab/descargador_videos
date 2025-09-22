@@ -129,13 +129,8 @@ def index():
             yt = YouTube(url)
             duration = format_duration(yt.length)
 
-            # 🎥 Buscar siempre 1080p con el fps más alto disponible
-            video_stream = (
-                yt.streams.filter(adaptive=True, type="video", file_extension="mp4", res="1080p")
-                .order_by("fps")
-                .desc()
-                .first()
-            )
+            # 🎥 Buscar siempre 1080p con el fps más alto disponible -UPDATE
+            video_streams = sorted(video_streams, key=lambda s: s.fps or 0, reverse=True)
 
             audio_stream = (
                 yt.streams.filter(adaptive=True, type="audio")
@@ -492,5 +487,6 @@ if __name__ == "__main__":
     print("📂 Carpeta de descargas usada:", DOWNLOADS_PATH)
     # app.run(host="0.0.0.0", port=5000, debug=False)
     app = Flask(__name__)
+
 
 
