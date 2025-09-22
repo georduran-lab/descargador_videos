@@ -146,33 +146,36 @@ def index():
             # 🔹 Escoger el mejor audio disponible
             audio_stream = yt.streams.filter(adaptive=True, type="audio").order_by("abr").desc().first()
 
-            if video_stream and audio_stream:
-                fps = video_stream.fps or 0
-                resolution = video_stream.resolution or "N/A"
+           if video_stream and audio_stream:
+            fps = video_stream.fps or 0
+            resolution = video_stream.resolution or "N/A"
+        
+            # Etiqueta de calidad (ejemplo: 1080p60)
+            video_quality = f"{resolution}{fps if fps else ''}"
+        
+            # ✅ Calcular tamaños seguros
+            video_size_bytes = (getattr(video_stream, "filesize", 0) or 0) + (getattr(audio_stream, "filesize", 0) or 0)
+            video_size = format_size(video_size_bytes)
+        
+            audio_quality = getattr(audio_stream, "abr", "unknown")
+            audio_size_bytes = getattr(audio_stream, "filesize", 0) or 0
+            audio_size = format_size(audio_size_bytes)
+        
+            video_info = {
+                "title": yt.title,
+                "author": yt.author,
+                "views": format_views(yt.views),
+                "length": duration,
+                "thumbnail": yt.thumbnail_url,
+                "url": url,
+                "publish_date": yt.publish_date.strftime("%d/%m/%Y") if getattr(yt, "publish_date", None) else "",
+                "video_quality": video_quality,
+                "fps": fps,
+                "video_size": video_size,
+                "audio_quality": audio_quality,
+                "audio_size": audio_size
+            }
 
-                # Construcción de la etiqueta de calidad (ejemplo: 1080p60)
-                video_quality = f"{resolution}{fps if fps else ''}"
-
-                # Calcular tamaños aproximados
-                video_size = format_size((video_stream.filesize or 0) + (audio_stream.filesize or 0))
-                audio_quality = getattr(audio_stream, "abr", "unknown")
-                audio_size = format_size(audio_stream.filesize or 0)
-
-                # 🔹 Información final para la plantilla
-                video_info = {
-                    "title": yt.title,
-                    "author": yt.author,
-                    "views": format_views(yt.views),
-                    "length": duration,
-                    "thumbnail": yt.thumbnail_url,
-                    "url": url,
-                    "publish_date": yt.publish_date.strftime("%d/%m/%Y") if getattr(yt, "publish_date", None) else "",
-                    "video_quality": video_quality,
-                    "fps": fps,
-                    "video_size": video_size,
-                    "audio_quality": audio_quality,
-                    "audio_size": audio_size
-                }
             else:
                 video_info = {"error": "No se encontraron streams en 1080p con fps >= 24."}
 
@@ -503,6 +506,7 @@ if __name__ == "__main__":
     print("📂 Carpeta de descargas usada:", DOWNLOADS_PATH)
     # app.run(host="0.0.0.0", port=5000, debug=False)
     app = Flask(__name__)
+
 
 
 
