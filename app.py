@@ -5,6 +5,7 @@ import random
 import webbrowser
 import threading
 import sys 
+from waitress import serve
 
 phrases = [
     "🚀 ¡Al infinito y más allá! – Buzz Lightyear (Toy Story)",
@@ -188,7 +189,4 @@ def download():
         return f"Error: {e}", 500
 
 if __name__ == "__main__":
-    import socket
-    local_ip = socket.gethostbyname(socket.gethostname())
-    print(f"Servidor disponible en: http://{local_ip}:5000")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    serve(app.app, host="0.0.0.0", port=8080)
