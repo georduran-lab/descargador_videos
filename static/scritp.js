@@ -1,86 +1,9 @@
-function showOverlay(){
-    document.getElementById('overlay').classList.add('show');
-    document.getElementById('modal-title').textContent = 'Descargando...';
-    document.getElementById('status-text').textContent = 'Conectando al servidor...';
-    setProgress(0);
-  }
-  function hideOverlay(){
-    document.getElementById('overlay').classList.remove('show');
-  }
-  function setProgress(p){
-    const fill = document.getElementById('progress-fill');
-    const pct = Math.max(0, Math.min(100, p));
-    fill.style.width = pct + '%';
-    document.getElementById('percent-text').textContent = pct + '%';
-  }
-
-  async function startDownload(kind){
-    const videoUrl = document.getElementById('video_url')?.value || document.getElementById('url_input')?.value;
-    if(!videoUrl){
-      alert('Pega primero la URL y pulsa "Obtener información" o escribe la URL.');
-      return;
+ if (performance.navigation.type === 1) {
+        // Si se recarga la página, redirige al inicio
+        window.location.href = "/";
     }
-    const endpoint = kind === 'mp4' ? '/start_download_mp4' : '/start_download_mp3';
-    try{
-      const body = new URLSearchParams({url: videoUrl});
-      const res = await fetch(endpoint, { method: 'POST', body: body });
-      if(!res.ok){
-        const err = await res.json().catch(()=>({error:'error'}));
-        alert('Error al iniciar: ' + (err.error || 'Status ' + res.status));
-        return;
-      }
-      const data = await res.json();
-      const taskId = data.task_id;
-      showOverlay();
 
-      const es = new EventSource('/progress/' + taskId);
-      es.onmessage = function(evt){
-        try{
-          const msg = JSON.parse(evt.data);
-          if(msg.status === 'downloading'){
-            setProgress(msg.percent || 0);
-            document.getElementById('status-text').textContent = `Descargando... ${msg.percent || 0}%`;
-          } else if(msg.status === 'started'){
-            document.getElementById('status-text').textContent = msg.message || 'Iniciando...';
-          } else if(msg.status === 'info'){
-            document.getElementById('status-text').textContent = msg.message || '';
-          } else if(msg.status === 'merging'){
-            setProgress(100);
-            document.getElementById('status-text').textContent = msg.message || 'Uniendo...';
-          } else if(msg.status === 'finished'){
-            setProgress(100);
-            document.getElementById('status-text').textContent = msg.message || 'Finalizado';
-            // cerramos EventSource y escondemos overlay tras 1.5s
-            es.close();
-            setTimeout(hideOverlay, 1500);
-            alert(msg.message || 'Descarga completada');
-          } else if(msg.status === 'error'){
-            es.close();
-            document.getElementById('status-text').textContent = 'Error: ' + (msg.message || '');
-            alert('Error: ' + (msg.message || 'Error desconocido'));
-            setTimeout(hideOverlay, 2000);
-          }
-        }catch(e){
-          console.error('parse error', e, evt.data);
-        }
-      };
-
-      es.onerror = function(e){
-        console.error('EventSource error', e);
-        // no alert inmediato; seguirá intentando hasta finalizar
-      };
-
-    }catch(err){
-      console.error(err);
-      alert('Error iniciando descarga. Revisa la consola.');
-    }
-  }
-
-  // prevenir reenvío de POST al recargar la página (simple)
-  if ( window.history.replaceState ) {
-    window.history.replaceState( null, null, window.location.href );
-  }
-
+    //ANIMACION MAQUINA DE ESCRIBIR 
     document.addEventListener("DOMContentLoaded", () => {
     const el = document.getElementById("footer-phrase");
     const text = el.textContent;
@@ -97,7 +20,7 @@ function showOverlay(){
     typeWriter();
      });
 
-  /* ANIMACION DE DESTELLOS ROJOS Y BLANCO RANDOM */
+     /* ANIMACION DE DESTELLOS ROJOS Y BLANCO RANDOM */
       const bg = document.querySelector(".background");
       let flashInterval; // aquí guardamos el intervalo activo
 
@@ -160,40 +83,3 @@ function showOverlay(){
 
       // observar cambios en el body
       observer.observe(document.body, { childList: true, subtree: true });
-
-      // PRUEBA ARREGLAR SUBMENU Y QUE CADA BOTON TENGA SU SUBMENU
-
-      async function showQualityMenu() {
-      const url = document.getElementById("video_url").value;
-      const res = await fetch("/get_streams", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({url})
-      });
-      const streams = await res.json();
-
-      const menu = document.getElementById("qualityMenu");
-      menu.innerHTML = "";
-      menu.style.display = "block";
-
-      streams.forEach(s => {
-        const btn = document.createElement("button");
-        if (s.type === "video") {
-          btn.innerText = `🎥 ${s.resolution} @${s.fps || 30}fps (${s.size})`;
-        } else {
-          btn.innerText = `🎵 ${s.abr} (${s.size})`;
-        }
-
-        btn.onclick = async () => {
-          const r = await fetch("/start_download", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({url, itag: s.itag})
-          });
-          const {task_id} = await r.json();
-          alert(`✅ Descarga iniciada (task: ${task_id})`);
-        };
-
-        menu.appendChild(btn);
-      });
-    } 
