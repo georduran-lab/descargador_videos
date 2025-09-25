@@ -1,31 +1,25 @@
-:root { 
-  --accent:#e50914; /* color principal (rojo estilo YouTube) */
-  --bg:#0f1113d2;   /* color de fondo base */
-  --card: rgba(0,0,0,0.65); /* color de las tarjetas */
+:root {
+  --accent: #e50914;
+  --bg: rgba(0,0,0,0.85);
+  --card: rgba(0,0,0,0.65);
 }
 
-/* --- ESTILOS BASE --- */
 body {
-  margin:0;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background:#000000ec; /* fondo negro */
-  color:#fff;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: #000000ea;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .wrap {
-  width:100%;
-  max-width:900px; /* ancho máximo de contenido */
-  position:relative;
-}
-
-.container {
+  width: 100%;
+  max-width: 900px;
   position: relative;
-  z-index: 2; /* asegura que quede sobre el fondo */
 }
 
 /* --- FONDO DIFUMINADO --- */
@@ -35,37 +29,24 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;     /* la imagen cubre toda la pantalla */
-  background-position: center;/* centrada */
-  filter: blur(15px) brightness(0.5); /* desenfoque + oscurecimiento */
-  z-index: -1; /* detrás del contenido */
-  opacity: 0;  /* inicia invisible */
-  animation: fadeInBg 2s ease forwards; /* animación de aparición */
-  overflow: hidden; /* oculta cualquier overflow de elementos hijos */
-
+  background-size: cover;
+  background-position: center;
+  filter: blur(15px) brightness(0.6); /* desenfoque + más oscuro */
+  z-index: -1;
   opacity: 0;
-  animation: fadeInBg 2s ease forwards, zoomBg 12s ease-in-out infinite; /* 👈 añadimos zoom */
+  animation: fadeInBg 2s ease forwards, zoomBg 12s ease-in-out infinite;
+  overflow: hidden;
 }
 
 @keyframes zoomBg {
   0%   { transform: scale(1); }
-  50%  { transform: scale(1.05); } /* 👈 crece 5% */
-  100% { transform: scale(1); }    /* 👈 vuelve al tamaño normal */
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 
-.background.active::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0);
-  transition: background 3s ease; /* transición al aplicar overlay */
-}
-body:hover .background::before {
-  background: rgba(0, 0, 0, 0.452); /* efecto al pasar el mouse */
-}
 @keyframes fadeInBg {
-  from { opacity: 0; } /* inicia transparente */
-  to { opacity: 1; }   /* aparece */
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* --- DESTELLOS ALEATORIOS --- */
@@ -73,178 +54,152 @@ body:hover .background::before {
   position: absolute;
   width: 300px;
   height: 300px;
-  border-radius: 50%; /* forma circular */
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.8) 0%,   /* centro blanco translúcido */
-    rgba(255, 0, 0, 0.5) 30%,      /* rojo brillante */
-    rgba(139, 0, 0, 0.3) 60%,      /* rojo oscuro */
-    rgba(0, 0, 0, 0) 100%          /* se funde con el fondo */
-  );
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255,0,0,0.5) 30%, rgba(139,0,0,0.3) 60%, rgba(0,0,0,0) 100%);
   opacity: 0;
   transform: scale(0.5);
-  pointer-events: none; /* no bloquea clics */
-  animation: flashAnim 4s ease-out forwards; /* animación de aparición/desaparición */
-  z-index: -1; /* siempre detrás */
+  pointer-events: none;
+  animation: flashAnim 4s ease-out forwards;
+  z-index: -1;
   transition: all 1s ease;
 }
+
 @keyframes flashAnim {
-  0%   { opacity: 0; transform: scale(0.5); }  /* arranca pequeño y oculto */
-  20%  { opacity: 0.8; transform: scale(1); }  /* aparece */
-  80%  { opacity: 0.7; transform: scale(1.2);} /* se expande */
-  100% { opacity: 0; transform: scale(1.5);}   /* desaparece */
+  0%   { opacity: 0; transform: scale(0.5); }
+  20%  { opacity: 0.8; transform: scale(1); }
+  80%  { opacity: 0.7; transform: scale(1.2);}
+  100% { opacity: 0; transform: scale(1.5);}
 }
+
 .flash.fade-out {
-  opacity: 0; /* se oculta */
-  width: 0;   /* se reduce a 0 */
+  opacity: 0;
+  width: 0;
   height: 0;
   background: none;
 }
 
-/* --- TARJETA PRINCIPAL --- */
 .card {
   background: rgba(0, 0, 0, 0.541);
   padding: 28px;
-  border-radius: 15px; /* bordes redondeados */
+  border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   z-index:2;
 }
 
-/* --- TIPOGRAFÍA ADAPTATIVA (RESPONSIVE) --- */
-h1 {
-  margin:0 0 14px;
-  font-size: clamp(1.4rem, 2vw + 1rem, 2rem);
-}
-h2 {
-  margin:0 0 6px;
-  font-size: clamp(1.1rem, 1.5vw + 0.8rem, 1.6rem);
-}
-p, button, input, .small {
-  font-size: clamp(0.85rem, 1vw + 0.6rem, 1rem);
-}
+/* --- TIPOGRAFÍA ADAPTATIVA --- */
+h1 { margin:0 0 14px; font-size: clamp(1.4rem, 2vw + 1rem, 2rem); }
+h2 { margin:0 0 6px; font-size: clamp(1.1rem, 1.5vw + 0.8rem, 1.6rem); }
+p, button, input, .small { font-size: clamp(0.85rem, 1vw + 0.6rem, 1rem); }
 
 /* --- FORMULARIO --- */
 .row {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap; /* se acomoda en varias líneas en pantallas pequeñas */
-}
-input[type="text"] {
-  flex:1;              /* ocupa todo el espacio disponible */
-  min-width:180px;     /* mínimo ancho */
-  padding:12px 14px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.03);
-  color:#fff;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: stretch;
 }
 
-/* --- BOTONES --- */
-button {
+/* Input con el mismo ancho que la miniatura */
+input[type="text"] {
+  flex: 0 0 200px; /* igual que el ancho desktop de la miniatura */
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: #fff;
+  box-sizing: border-box;
+}
+
+form button[name="preview"] {
+  flex: 0 0 200px; /* mismo ancho que input y miniatura */
+  padding: 10px 14px;
+}
+
+/* --- BOTONES DE DESCARGA --- */
+.btn-download {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-left: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-download:hover {
+  filter: brightness(85%);
+  transform: scale(1.03);
+}
+
+form button {
   flex:1;
   min-width:140px;
   padding:10px 14px;
+  margin: 12px;
   border-radius:10px;
   border:none;
-  background:var(--accent); /* rojo principal */
+  background:var(--accent);
   color:#fff;
   cursor:pointer;
   font-weight:600;
-  transition: all 0.3s ease; /* suaviza la animación */
+  transition: all 0.3s ease;
 }
 
-button:hover {
-  filter: brightness(85%);   /* 👈 oscurece */
-  transform: scale(1.03);     /* 👈 crece */
+form button:hover {
+  filter: brightness(100%);
+  transform: scale(1.03);
 }
 
-/* --- INFO DEL VIDEO --- */
+/* --- INFO APARECE SUAVEMENTE --- */
 .info {
-  margin-top:18px;
-  display:flex;
-  gap:18px;
-  flex-wrap:wrap;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  position: relative;
+  opacity: 0;
+  animation: fadeInInfo 1s ease forwards;
 }
+
+@keyframes fadeInInfo {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .thumb {
-  flex:0 0 200px; /* ancho fijo */
-  max-width:100%;
+  flex:0 0 200px;
+  max-width:50%;
   border-radius:10px;
   box-shadow:0 8px 26px rgba(0,0,0,0.6);
 }
+
 .meta {
-  flex:1;
-  min-width:220px; /* asegura espacio mínimo */
+  flex: 1;
+  min-width: 220px;
+  z-index: 2;
 }
-.meta p { margin:6px 0; color:#d0d0d0; }
 
+.meta p { margin: 6px 0; color: #d0d0d0; }
+
+/* --- ACCIONES --- */
 .actions {
-  margin-top:12px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.small {
-  font-size:0.9rem;
-  padding:8px 10px;
-  border-radius:8px;
-  background:rgba(255,255,255,0.03);
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-/* --- OVERLAY MODAL DE DESCARGA --- */
-.overlay {
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,0.55); /* fondo semitransparente */
-  z-index:999;
-  visibility:hidden;
-  opacity:0;
-  transition:opacity .25s, visibility .25s;
+.actions h3 {
+  width: 100%;
+  margin-bottom: 6px;
 }
-.overlay.show {
-  visibility:visible;
-  opacity:1; /* aparece */
-}
-.modal {
-  background:#0e1113;
-  padding:22px;
-  border-radius:12px;
-  width:90%;
-  max-width:480px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.6);
-  color:#fff;
-  text-align:center;
-}
-.spinner {
-  width:48px;
-  height:48px;
-  margin:8px auto 16px;
-  border-radius:50%;
-  border:4px solid rgba(255,255,255,0.08);
-  border-top-color:var(--accent); /* parte visible */
-  animation:spin 1s linear infinite; /* gira */
-}
-@keyframes spin { to{ transform:rotate(360deg);} }
-.progressbar {
-  height:12px;
-  background:rgba(255,255,255,0.06);
-  border-radius:10px;
-  overflow:hidden;
-  margin:10px 0;
-}
-.progress-fill {
-  height:100%;
-  width:0%; /* se llenará dinámicamente */
-  background:linear-gradient(90deg,var(--accent),#ff6b6b);
-  transition:width .2s ease;
-}
-.percent { font-weight:700; margin-top:6px; }
-.status { margin-top:8px; color:#cfcfcf; font-size:0.95rem; }
 
-/* --- FOOTER CON FRASE ALEATORIA --- */
+.actions button {
+  flex: 0 0 auto;
+}
+
+#qualityMenu button { width:100%; margin-top:5px; }
+
+/* --- FOOTER --- */
 footer {
   margin-top: 20px;
   text-align: center;
@@ -257,52 +212,38 @@ footer {
   display: inline-block;
   border-right: 2px solid #999;
   padding-right: 5px;
-  white-space: normal;   /* 🔥 permite saltos de línea */
-  word-break: break-word; /* rompe palabras largas si es necesario */
-  max-width: 90%;         /* limita ancho para forzar segunda línea */
+  white-space: normal;
+  word-break: break-word;
+  max-width: 90%;
 }
 
-/* --- RESPONSIVE (BREAKPOINTS) --- */
+/* --- RESPONSIVE --- */
 @media (max-width:768px){
   .wrap { padding:12px; }
-  .thumb { flex:0 0 160px; } /* achica miniatura */
+  .thumb { flex:0 0 160px; }
+  input[type="text"], form button[name="preview"] { flex:0 0 160px; } /* ancho igual miniatura */
 }
+
 @media (max-width:480px){
-  .info { flex-direction:column; align-items:center; } /* apila todo */
+  .info { flex-direction:column; align-items:center; }
   .thumb { width:100%; max-width:260px; align-items:center; }
   .meta { text-align:center; }
   .actions { flex-direction:column; }
-  button { width:100%; } /* botones ocupan todo */
+  button, input[type="text"], form button[name="preview"] { width:100%; }
+  input[type="text"], form button[name="preview"] { flex:0 0 260px; } /* responsive ancho miniatura */
 }
 
 /*AJUSTE BETA */
-
-/* Ajustes para pantallas grandes (PC) */
 @media (min-width: 1024px) {
   .card {
-    max-width: 780px;   /* más angosta */
-    padding: 30px;      /* menos padding */
+    max-width: 780px;
+    padding: 30px;
     border-radius: 12px;
   }
 }
 
- .card h1 {
-    font-size: 24px;    /* título un poco más pequeño */
-  }
-
-  .card .info img.thumb {
-    width: 360px;       /* miniatura más chica */
-  }
-
-  .card .meta h2 {
-    font-size: 18px;    /* título del video reducido */
-  }
-
-  .card .meta p {
-    font-size: 15px;    /* textos más pequeños */
-  }
-
-  .card button {
-    padding: 8px 12px;  /* botones más compactos */
-    font-size: 14px;
-  }
+.card h1 { font-size: 24px; }
+.card .info img.thumb { width: 360px; }
+.card .meta h2 { font-size: 18px; }
+.card .meta p { font-size: 15px; }
+.card button { padding: 8px 12px; margin: 8px 0px; font-size: 14px; }
