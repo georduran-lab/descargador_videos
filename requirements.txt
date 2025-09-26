@@ -1,4 +1,6 @@
 Flask
 yt-dlp
 gunicorn
+waitress
+
 
