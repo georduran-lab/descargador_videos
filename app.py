@@ -93,32 +93,28 @@ def descargar_video(url, formato):
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
+
+    common_opts = {
+        "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
+        # Usa cookies directamente desde Chrome, también puedes poner "firefox" o "edge"
+        "cookiesfrombrowser": ("chrome",)
+    }
+
     if formato == "mp4":
-        # Configuración para descargar MP4
         ydl_opts = {
+            **common_opts,
             "format": "bestvideo+bestaudio/best",
-            "merge_output_format": "mp4",
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+            "merge_output_format": "mp4"
         }
     else:
-        # Configuración para descargar MP3 con carátula
         ydl_opts = {
+            **common_opts,
             "format": "bestaudio/best",
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-            "writethumbnail": True,  # Descarga la miniatura
+            "writethumbnail": True,
             "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "320"
-                },
-                {
-                    "key": "FFmpegMetadata",  # Añade metadata
-                    "add_metadata": True
-                },
-                {
-                    "key": "EmbedThumbnail"   # Incrusta la miniatura
-                }
+                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "320"},
+                {"key": "FFmpegMetadata", "add_metadata": True},
+                {"key": "EmbedThumbnail"}
             ]
         }
 
