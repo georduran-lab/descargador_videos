@@ -150,7 +150,7 @@ def descargar_video(url, formato):
     """
 
     # Ruta al archivo de cookies exportado desde tu navegador
-    COOKIES_PATH = "cookies.txt"
+    COOKIES_PATH = os.path.join(os.getcwd(), "cookies.txt")
 
     if formato == "mp4":
         # Configuración para descargar MP4
@@ -168,7 +168,6 @@ def descargar_video(url, formato):
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
             "writethumbnail": True,  # Descarga la miniatura
             'cookies': COOKIES_PATH,   # ruta al archivo en formato Netscape (cookies.txt)
-            'verbose': True
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
