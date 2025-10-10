@@ -148,17 +148,12 @@ def descargar_video(url, formato):
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
-
-    # Ruta al archivo de cookies exportado desde tu navegador
-    COOKIES_PATH = os.path.join(os.getcwd(), "cookies.txt")
-
     if formato == "mp4":
         # Configuración para descargar MP4
         ydl_opts = {
             "format": "bestvideo+bestaudio/best",
             "merge_output_format": "mp4",
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-           'cookies': COOKIES_PATH,   # ruta al archivo en formato Netscape (cookies.txt)
            'verbose': True
         }
     else:
@@ -167,7 +162,6 @@ def descargar_video(url, formato):
             "format": "bestaudio/best",
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
             "writethumbnail": True,  # Descarga la miniatura
-            'cookies': COOKIES_PATH,   # ruta al archivo en formato Netscape (cookies.txt)
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
