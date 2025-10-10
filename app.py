@@ -5,7 +5,7 @@ import random
 import webbrowser
 import threading
 import sys 
-from waitress import serve
+import time 
 
 phrases = [
     "🚀 ¡Al infinito y más allá! – Buzz Lightyear (Toy Story)",
@@ -57,6 +57,20 @@ def format_views(n):
         return f"{n/1_000:.1f}K"
     else:
         return str(n)
+    
+def format_size(size_bytes: int) -> str:
+    try:
+        size = float(size_bytes)
+    except Exception:
+        return "0 B"
+    if size == 0:
+        return "0 B"
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while size >= 1024 and i < len(units) - 1:
+        size /= 1024.0
+        i += 1
+    return f"{size:.2f} {units[i]}"
 
 def format_duration(seconds: int) -> str:
     hours, remainder = divmod(seconds, 3600)
@@ -70,7 +84,7 @@ def obtener_info(url):
     ydl_opts = {"quiet": True, "skip_download": True}
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-
+    
     data = {
         "title": info.get("title"),
         "author": info.get("uploader"),
@@ -78,12 +92,54 @@ def obtener_info(url):
         "views": format_views(info.get("view_count", 0)),
         "upload_date": info.get("upload_date"),
         "thumbnail": info.get("thumbnail"),
-        "url": url
+        "url": url,
     }
 
     if data["upload_date"]:
         d = data["upload_date"]
         data["upload_date"] = f"{d[6:8]}/{d[4:6]}/{d[0:4]}"
+
+     # --- 🔍 Buscar formatos de video/audio ---
+    formats = info.get("formats", [])
+    best_video = None
+    best_audio = None
+
+    for f in formats:
+        # Buscar mejor video MP4
+        if f.get("vcodec") != "none" and f.get("ext") == "mp4":
+            if not best_video or f.get("height", 0) > best_video.get("height", 0):
+                best_video = f
+
+        # Buscar mejor audio (m4a, mp3, webm)
+        if f.get("acodec") != "none" and f.get("ext") in ["m4a", "mp3", "webm"]:
+            if not best_audio or f.get("abr", 0) > best_audio.get("abr", 0):
+                best_audio = f
+
+    # --- 📊 Agregar detalles ---
+    video_size = (best_video.get("filesize") or best_video.get("filesize_approx") or 0) if best_video else 0
+    audio_size = (best_audio.get("filesize") or best_audio.get("filesize_approx") or 0) if best_audio else 0
+
+    total_size = video_size + audio_size
+    total_size_mb = f"{total_size / (1024 * 1024):.2f} MB" if total_size > 0 else "Desconocido"
+
+    # --- 📊 Agregar detalles de calidad ---
+    if best_video:
+        data["video_resolution"] = f"{best_video.get('height', 0)}p"
+        data["video_fps"] = f"{best_video.get('fps', 0)} FPS" if best_video.get('fps') else "N/A"
+        data["video_size"] = total_size_mb  # ✅ suma de video + audio
+    else:
+        data["video_resolution"] = "N/A"
+        data["video_fps"] = "N/A"
+        data["video_size"] = "N/A"
+
+    if best_audio:
+        data["audio_quality"] = f"{best_audio.get('abr', 0)} kbps"
+        size = best_audio.get("filesize") or best_audio.get("filesize_approx", 0)
+        data["audio_size"] = f"{size / (1024 * 1024):.2f} MB" if size else "Desconocido"
+    else:
+        data["audio_quality"] = "N/A"
+        data["audio_size"] = "N/A"
+
 
     return data
 
@@ -93,28 +149,32 @@ def descargar_video(url, formato):
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
-
-    common_opts = {
-        "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-        # Usa cookies directamente desde Chrome, también puedes poner "firefox" o "edge"
-        "cookiesfrombrowser": ("chrome",)
-    }
-
     if formato == "mp4":
+        # Configuración para descargar MP4
         ydl_opts = {
-            **common_opts,
             "format": "bestvideo+bestaudio/best",
-            "merge_output_format": "mp4"
+            "merge_output_format": "mp4",
+            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
         }
     else:
+        # Configuración para descargar MP3 con carátula
         ydl_opts = {
-            **common_opts,
             "format": "bestaudio/best",
-            "writethumbnail": True,
+            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
+            "writethumbnail": True,  # Descarga la miniatura
             "postprocessors": [
-                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "320"},
-                {"key": "FFmpegMetadata", "add_metadata": True},
-                {"key": "EmbedThumbnail"}
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "320"
+                },
+                {
+                    "key": "FFmpegMetadata",  # Añade metadata
+                    "add_metadata": True
+                },
+                {
+                    "key": "EmbedThumbnail"   # Incrusta la miniatura
+                }
             ]
         }
 
@@ -129,19 +189,27 @@ def descargar_video(url, formato):
 
 def remove_file_later(path):
     def _remove():
+        # Espera 50 segundos antes de intentar eliminar el archivo
+        time.sleep(50)
         while True:
             try:
-                with open(path, "a"): pass
-                os.remove(path)
+                # Verifica que el archivo exista antes de intentar eliminarlo
+                if os.path.exists(path):
+                    with open(path, "a"): 
+                        pass
+                    os.remove(path)
                 break
-            except:
+            except Exception:
+                # Espera 1 segundo antes de volver a intentar
                 time.sleep(1)
+
+    # Inicia el hilo en segundo plano
     threading.Thread(target=_remove, daemon=True).start()
 
-def open_browser():
-    webbrowser.open_new("http://127.0.0.1:5000")
+#def open_browser():
+#   webbrowser.open_new("http://127.0.0.1:5000")
 
-threading.Timer(1.5, open_browser).start()
+#threading.Timer(1.5, open_browser).start()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -158,7 +226,7 @@ def index():
             try:
                 video_info = obtener_info(url)
                 # Guardamos info en sesión o query string si quieres persistir
-                return render_template("index.html", video_info=video_info, url=url)
+                return render_template("index.html", video_info=video_info, url=url, phrase=phrase)
             except Exception as e:
                 flash(f"Error al obtener info: {e}")
                 return redirect(url_for("index"))
@@ -170,12 +238,19 @@ def index():
 
     return render_template("index.html", video_info=None, url="", phrase=phrase)
 
-@app.route("/download", methods=["POST"])
+@app.route("/download", methods=["GET", "POST"])
 def download():
-    url = request.form.get("url")
-    formato = request.form.get("formato")
+    # Lee datos desde POST o GET
+    url = request.form.get("url") or request.args.get("url")
+    formato = request.form.get("formato") or request.args.get("formato")
+
+    # Si el navegador hace un GET sin parámetros (confirmación)
+    if request.method == "GET" and (not url or not formato):
+        return redirect(url_for("index"))
+
     if not url or not formato:
         return "Faltan datos", 400
+
     try:
         path = descargar_video(url, formato)
         response = send_file(path, as_attachment=True, download_name=os.path.basename(path))
@@ -185,4 +260,7 @@ def download():
         return f"Error: {e}", 500
 
 if __name__ == "__main__":
-    serve(app.app, host="0.0.0.0", port=8080)
+    #import socket
+    #local_ip = socket.gethostbyname(socket.gethostname())
+    #print(f"Servidor disponible en: http://{local_ip}:5000")
+    app.run(host="0.0.0.0", port=5000, debug=True)
