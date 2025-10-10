@@ -142,19 +142,23 @@ def obtener_info(url):
 
 
     return data
-
 def descargar_video(url, formato):
     """
     Descarga un video o audio de YouTube según el formato indicado.
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
+
+    # Ruta al archivo de cookies exportado desde tu navegador
+    COOKIES_PATH = "cookies.txt"
+
     if formato == "mp4":
         # Configuración para descargar MP4
         ydl_opts = {
             "format": "bestvideo+bestaudio/best",
             "merge_output_format": "mp4",
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
+            "cookiefile": COOKIES_PATH,  # ✅ Se añaden cookies
         }
     else:
         # Configuración para descargar MP3 con carátula
@@ -162,6 +166,7 @@ def descargar_video(url, formato):
             "format": "bestaudio/best",
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
             "writethumbnail": True,  # Descarga la miniatura
+            "cookiefile": COOKIES_PATH,  # ✅ Se añaden cookies
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -185,7 +190,6 @@ def descargar_video(url, formato):
     # Obtiene la ruta del archivo descargado
     file_path = info["requested_downloads"][0]["filepath"]
     return file_path
-
 
 def remove_file_later(path):
     def _remove():
