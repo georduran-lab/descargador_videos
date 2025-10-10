@@ -1,3 +1,4 @@
+
  if (performance.navigation.type === 1) {
         // Si se recarga la página, redirige al inicio
         window.location.href = "/";
