@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,8 +14,10 @@
         <div class="background" style="background-image: url('{{ video_info.thumbnail }}');"></div>
         <h1>🎥 DESCARGAR VIDEOS DE YOUTUBE 🔥</h1>
         <form method="POST">
-            <input type="text" name="url" placeholder="Pega la URL de YouTube" value="{{ url or '' }}">
-            <button type="submit" name="preview">Obtener Información</button>
+            <div class="row">
+                <input type="text" name="url" placeholder="Pega la URL de YouTube" value="{{ url or '' }}">
+                <button type="submit" name="preview">Obtener Información</button>
+            </div>
         </form>
 
         {% if video_info %}
@@ -22,16 +25,15 @@
             <img class="thumb" src="{{ video_info.thumbnail }}" alt="thumbnail">
             <div class="meta">
                 <h2>{{ video_info.title }}</h2>                
-                <p id="author">©️ Autor: {{ video_info.author }}</p>                
+                <p id="author">📺 Canal: {{ video_info.author }}</p>                
                 <p>👀 Vistas: {{ video_info.views }}</p>
                 <p>⏳ Duración: {{ video_info.duration }}</p>
                 <p>📅 Publicado: {{ video_info.upload_date }}</p>
 
                 <form method="POST" action="/download">
                     <input type="hidden" name="url" value="{{ video_info.url }}">
-                    <br>
-                    <button type="submit" name="formato" value="mp4" class="btn-download">📹 Descargar MP4</button>
-                    <button type="submit" name="formato" value="mp3" class="btn-download">🎵 Descargar MP3</button>
+                    <button type="submit" name="formato" value="mp4" class="btn-download">📹 Descargar MP4 <br>({{ video_info.video_resolution }} • {{ video_info.video_fps }})</button>
+                    <button type="submit" name="formato" value="mp3" class="btn-download">🎵 Descargar MP3 <br>(320 Kbps)</button>
                 </form>
             </div>
         </div>
