@@ -193,8 +193,8 @@ def descargar_video(url, formato):
 
 def remove_file_later(path):
     def _remove():
-        # Espera 50 segundos antes de intentar eliminar el archivo
-        time.sleep(50)
+        # Espera 10 Minutos antes de intentar eliminar el archivo
+        time.sleep(600)
         while True:
             try:
                 # Verifica que el archivo exista antes de intentar eliminarlo
