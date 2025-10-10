@@ -1,3 +1,4 @@
+
 :root {
   --accent: #e50914;
   --bg: rgba(0,0,0,0.85);
@@ -81,27 +82,27 @@ body {
 .card {
   background: rgba(0, 0, 0, 0.541);
   padding: 28px;
-  border-radius: 15px;
+  border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   z-index:2;
 }
 
 /* --- TIPOGRAFÍA ADAPTATIVA --- */
 h1 { margin:0 0 14px; font-size: clamp(1.4rem, 2vw + 1rem, 2rem); }
-h2 { margin:0 0 6px; font-size: clamp(1.1rem, 1.5vw + 0.8rem, 1.6rem); }
+h2 { margin:0 0 15px; font-size: clamp(1.1rem, 1.5vw + 0.8rem, 1.6rem); }
 p, button, input, .small { font-size: clamp(0.85rem, 1vw + 0.6rem, 1rem); }
 
 /* --- FORMULARIO --- */
 .row {
   display: flex;
-  gap: 6px;
+  gap: 18px;
   flex-wrap: wrap;
-  align-items: stretch;
+  align-items: center;
 }
 
 /* Input con el mismo ancho que la miniatura */
 input[type="text"] {
-  flex: 0 0 200px; /* igual que el ancho desktop de la miniatura */
+  flex: 0 0 360px; /* igual que el ancho desktop de la miniatura */
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.06);
@@ -111,7 +112,7 @@ input[type="text"] {
 }
 
 form button[name="preview"] {
-  flex: 0 0 200px; /* mismo ancho que input y miniatura */
+  flex: 0 0 360px; /* mismo ancho que input y miniatura */
   padding: 10px 14px;
 }
 
@@ -221,11 +222,12 @@ footer {
 @media (max-width:768px){
   .wrap { padding:12px; }
   .thumb { flex:0 0 160px; }
-  input[type="text"], form button[name="preview"] { flex:0 0 160px; } /* ancho igual miniatura */
+  .row { gap: 8px;align-items: center; /* centra horizontalmente */
+  justify-content: center;}
 }
 
 @media (max-width:480px){
-  .info { flex-direction:column; align-items:center; }
+  .info { flex-direction:column; align-items:center;}
   .thumb { width:100%; max-width:260px; align-items:center; }
   .meta { text-align:center; }
   .actions { flex-direction:column; }
