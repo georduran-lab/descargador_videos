@@ -158,7 +158,7 @@ def descargar_video(url, formato):
             "format": "bestvideo+bestaudio/best",
             "merge_output_format": "mp4",
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-            "cookiesfrombrowser": ("chrome",),  # 👈 Usa cookies directamente del navegador
+           # "cookiesfrombrowser": ("chrome",),  # 👈 Usa cookies directamente del navegador
         }
     else:
         # Configuración para descargar MP3 con carátula
@@ -166,7 +166,7 @@ def descargar_video(url, formato):
             "format": "bestaudio/best",
             "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
             "writethumbnail": True,  # Descarga la miniatura
-            "cookiesfrombrowser": ("chrome",),  # 👈 Usa cookies directamente del navegador
+            #"cookiesfrombrowser": ("chrome",),  # 👈 Usa cookies directamente del navegador
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
