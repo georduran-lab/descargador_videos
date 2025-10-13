@@ -395,10 +395,26 @@ def download():
 @app.route("/progress")
 def progress():
     return jsonify(progress_data)
+
+def download_with_cookies(url, cookies_path='cookies.txt', output_template='%(title)s.%(ext)s'):
+    if not os.path.isfile(cookies_path):
+        raise FileNotFoundError(f"No encontré el archivo de cookies: {cookies_path}")
+
+    ydl_opts = {
+        'outtmpl': output_template,
+        'cookiefile': cookies_path,
+        # puedes añadir más opciones: formato, calidad, quiet, retries...
+        'format': 'bestvideo+bestaudio/best',
+        'noplaylist': True,
+    }
+
+    with YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
 #--------------------------------
 
 if __name__ == "__main__":
     #import socket
     #local_ip = socket.gethostbyname(socket.gethostname())
     #print(f"Servidor disponible en: http://{local_ip}:5000")
+    url = "https://www.youtube.com/watch?v=WtyqTxeBVjg"
     app.run(host="0.0.0.0", port=5000, debug=True)
