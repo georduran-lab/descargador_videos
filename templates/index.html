@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -32,15 +31,24 @@
 
                 <form method="POST" action="/download">
                     <input type="hidden" name="url" value="{{ video_info.url }}">
-                    <button type="submit" name="formato" value="mp4" class="btn-download">📹 Descargar MP4 <br>({{ video_info.video_resolution }} • {{ video_info.video_fps }})</button>
-                    <button type="submit" name="formato" value="mp3" class="btn-download">🎵 Descargar MP3 <br>(320 Kbps)</button>
+                    <button type="submit" name="formato" value="mp4" class="btn-download" onclick="iniciarProgreso()">📹 Descargar MP4 <br>({{ video_info.video_resolution }} • {{ video_info.video_fps }})</button>
+                    <button type="submit" name="formato" value="mp3" class="btn-download" onclick="iniciarProgreso()">🎵 Descargar MP3 <br>(320 Kbps)</button>
                 </form>
             </div>
+        </div>
+        <!-- UPDATE -->
+        <!-- 🔄 CONTENEDOR DE PROGRESO -->
+        <div id="progress-container" style="display:none; margin-top: 20px;">
+        <div style="font-weight: bold; margin-bottom: 8px; color:#ffffff;">📥 Descargando<span id="dots"></span></div>
+        <div class="progress-wrapper">
+            <div id="progress-bar" class="progress-bar">0%</div>
+        </div>
+        <div id="progress-speed" class="progress-speed">Velocidad: 0 KB/s</div>
         </div>
         {% endif %}
     </div>
     <p id="footer-phrase">{{ phrase }}</p>
 </div>
-<script src="/static/scritp.js"></script>
+<script src="/static/script.js"></script>
 </body>
 </html>
