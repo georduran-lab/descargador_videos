@@ -80,8 +80,25 @@ def format_duration(seconds: int) -> str:
     else:
         return f"{mins}m {secs}s"
 
+# UPDATE ----------------------------------------------------------------
 def obtener_info(url):
-    ydl_opts = {"quiet": True, "skip_download": True}
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True,
+        "extract_flat": False,       # ✅ evita análisis innecesario de listas
+        "force_generic_extractor": False,
+        "noplaylist": True,          # ✅ ignora listas de reproducción
+        "player_client": "android",  # ✅ usa cliente Android (sin cifrados nsig)
+        "cachedir": os.path.expanduser("~/.cache/yt-dlp"),  # ✅ usa caché
+        "no_warnings": True,
+        "socket_timeout": 10,
+        "retries": 3,
+        "source_address": "0.0.0.0",
+        "concurrent_fragment_downloads": 8,
+        "quiet": True,
+    }
+# UPDATE------------------------------------------------------------------
+    
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
     
@@ -142,49 +159,93 @@ def obtener_info(url):
 
 
     return data
+
+# UPDATE------------------------------------------------------------------
+
 def descargar_video(url, formato):
     """
     Descarga un video o audio de YouTube según el formato indicado.
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
+
+    def progreso(d):
+        if d.get("status") == "downloading":
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 1  # evita división por cero
+            descargado = d.get("downloaded_bytes", 0)
+            velocidad = d.get("speed") or 0
+            porcentaje = (descargado / total) * 100
+            print(f"⬇️ {porcentaje:.1f}% | {velocidad/1024:.1f} KB/s", end="\r")
+        elif d.get("status") == "finished":
+            print("\n✅ Descarga completada, procesando...")
+
+    # 🔧 Configuración base
+    base_opts = {
+        "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
+        "progress_hooks": [progreso],
+        "quiet": True,
+        "concurrent_fragment_downloads": 5,
+        "http_chunk_size": 5_000_000,
+        "retries": 10,
+        "fragment_retries": 10,
+        "no_warnings": True,
+    }
+
+    # 🎬 Formatos según tipo
     if formato == "mp4":
-        # Configuración para descargar MP4
         ydl_opts = {
-            "format": "bestvideo+bestaudio/best",
+            **base_opts,
+            "format": "bestvideo*+bestaudio/best",
             "merge_output_format": "mp4",
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-           'verbose': True
+            "postprocessors": [{"key": "FFmpegVideoRemuxer", "preferedformat": "mp4"}],
         }
-    else:
-        # Configuración para descargar MP3 con carátula
+    else:  # MP3
         ydl_opts = {
+            **base_opts,
             "format": "bestaudio/best",
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
-            "writethumbnail": True,  # Descarga la miniatura
+            "writethumbnail": True,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
-                    "preferredquality": "320"
+                    "preferredquality": "320",
                 },
-                {
-                    "key": "FFmpegMetadata",  # Añade metadata
-                    "add_metadata": True
-                },
-                {
-                    "key": "EmbedThumbnail"   # Incrusta la miniatura
-                }
-            ]
+                {"key": "FFmpegMetadata"},
+                {"key": "EmbedThumbnail"},
+            ],
         }
 
-    # Ejecuta la descarga
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            # ✅ proteger contra errores internos
+            if not info or "requested_downloads" not in info:
+                raise Exception("Descarga incompleta o sin información válida.")
+    except ZeroDivisionError:
+        print("\n⚠️ Se detectó división por cero (probablemente tamaño desconocido). Reintentando sin progreso...\n")
+        ydl_opts.pop("progress_hooks", None)
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
 
-    # Obtiene la ruta del archivo descargado
-    file_path = info["requested_downloads"][0]["filepath"]
+    file_path = (
+        info["requested_downloads"][0].get("filepath")
+        if "requested_downloads" in info and info["requested_downloads"]
+        else os.path.join(DOWNLOAD_FOLDER, f"{info.get('title', 'video')}.mp4")
+    )
+
     return file_path
+
+def iniciar_descarga_en_hilo(url, formato):
+    def _run():
+        try:
+            path = descargar_video(url, formato)
+            print(f"✅ Descargado: {path}")
+        except Exception as e:
+            print(f"❌ Error al descargar: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+# UPDATE------------------------------------------------------------------
 
 def remove_file_later(path):
     def _remove():
