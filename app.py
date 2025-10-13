@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+#UPDATE--------------------------------------
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
+#--------------------------------------------
 from yt_dlp import YoutubeDL
 import os, threading, time
 import random
-import webbrowser
 import threading
 import sys 
 import time 
@@ -48,6 +49,9 @@ app.secret_key = "super_secret_key"
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), "downloads")
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+#UPDATE---------------------------------
+progress_data = {"status": "idle", "percent": 0, "speed": 0.0}
+#---------------------------------------
 def format_views(n):
     if n >= 1_000_000_000:
         return f"{n/1_000_000_000:.1f}B"
@@ -79,7 +83,8 @@ def format_duration(seconds: int) -> str:
         return f"{hours}h {mins}m {secs}s"
     else:
         return f"{mins}m {secs}s"
-
+    
+    
 # UPDATE ----------------------------------------------------------------
 def obtener_info(url):
     ydl_opts = {
@@ -98,7 +103,6 @@ def obtener_info(url):
         "quiet": True,
     }
 # UPDATE------------------------------------------------------------------
-    
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
     
@@ -168,16 +172,65 @@ def descargar_video(url, formato):
     MP4: video con audio
     MP3: audio con carátula incrustada
     """
-
+    """
+    UPDATE
+    """
+    global progress_data
+    
     def progreso(d):
+        global progress_data
+
+        # Verifica estado actual de descarga
         if d.get("status") == "downloading":
-            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 1  # evita división por cero
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 1
             descargado = d.get("downloaded_bytes", 0)
             velocidad = d.get("speed") or 0
             porcentaje = (descargado / total) * 100
-            print(f"⬇️ {porcentaje:.1f}% | {velocidad/1024:.1f} KB/s", end="\r")
+
+            # Detectar si es video o audio por el nombre del archivo
+            filename = d.get("filename", "")
+            if ".f" in filename or "video" in filename.lower():
+                fase = "video"
+                progreso_total = porcentaje * 0.7  # Video = 70% del total
+            elif ".m4a" in filename or ".webm" in filename or "audio" in filename.lower():
+                fase = "audio"
+                progreso_total = 70 + porcentaje * 0.2  # Audio = 20% del total
+            else:
+                fase = "combinando"
+                progreso_total = 90 + porcentaje * 0.1  # Combinación = 10% final
+
+            progress_data.update({
+                "status": "running",
+                "percent": round(progreso_total, 1),
+                "speed": round(velocidad / (1024 * 1024), 2),  # MB/s
+                "phase": fase
+            })
+
+            print(f"⬇️ {fase.upper()} {progreso_total:.1f}% | {velocidad / (1024 * 1024):.2f} MB/s", end="\r")
+
         elif d.get("status") == "finished":
             print("\n✅ Descarga completada, procesando...")
+            progress_data.update({
+                "status": "running",
+                "percent": 95,
+                "phase": "procesando"
+            })
+
+        elif d.get("status") == "error":
+            progress_data.update({
+                "status": "error",
+                "percent": 0,
+                "phase": "error"
+            })
+            print("❌ Error en la descarga")
+
+        else:
+            progress_data.update({
+                "status": "idle",
+                "percent": 0,
+                "speed": 0.0,
+                "phase": "esperando"
+            })
 
     # 🔧 Configuración base
     base_opts = {
@@ -215,11 +268,25 @@ def descargar_video(url, formato):
             ],
         }
 
+        # Resetear progreso antes de empezar - UPDATE
+        progress_data.update({"status": "starting", "percent": 0, "speed": 0.0})
+
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
+
+        #UPDATE--------------------------------------------------------------
+        progress_data.update({"status": "done", "percent": 100, "speed": 0.0})
+
+        file_path = (
+            info["requested_downloads"][0].get("filepath")
+            if "requested_downloads" in info and info["requested_downloads"]
+            else os.path.join(DOWNLOAD_FOLDER, f"{info.get('title', 'video')}.mp4")
+        )    
+        #---------------------------------------------------------------------
+
             # ✅ proteger contra errores internos
-            if not info or "requested_downloads" not in info:
+        if not info or "requested_downloads" not in info:
                 raise Exception("Descarga incompleta o sin información válida.")
     except ZeroDivisionError:
         print("\n⚠️ Se detectó división por cero (probablemente tamaño desconocido). Reintentando sin progreso...\n")
@@ -239,7 +306,7 @@ def iniciar_descarga_en_hilo(url, formato):
     def _run():
         try:
             path = descargar_video(url, formato)
-            print(f"✅ Descargado: {path}")
+            print(f"✅ Descargado: {path}")            
         except Exception as e:
             print(f"❌ Error al descargar: {e}")
 
@@ -247,10 +314,11 @@ def iniciar_descarga_en_hilo(url, formato):
 
 # UPDATE------------------------------------------------------------------
 
+
 def remove_file_later(path):
     def _remove():
-        # Espera 10 Minutos antes de intentar eliminar el archivo
-        time.sleep(600)
+        # Espera 50 segundos antes de intentar eliminar el archivo
+        time.sleep(50)
         while True:
             try:
                 # Verifica que el archivo exista antes de intentar eliminarlo
@@ -310,14 +378,24 @@ def download():
 
     if not url or not formato:
         return "Faltan datos", 400
+    
+ # 🔹 Reiniciar progreso ANTES de iniciar nueva descarga
+    global progress_data
+    progress_data = {"status": "running", "percent": 0, "speed": 0.0}
 
-    try:
+    try:           
         path = descargar_video(url, formato)
         response = send_file(path, as_attachment=True, download_name=os.path.basename(path))
         remove_file_later(path)
         return response
     except Exception as e:
         return f"Error: {e}", 500
+    
+#UPDATE--------------------------
+@app.route("/progress")
+def progress():
+    return jsonify(progress_data)
+#--------------------------------
 
 if __name__ == "__main__":
     #import socket
