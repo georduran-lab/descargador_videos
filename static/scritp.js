@@ -1,4 +1,3 @@
-
  if (performance.navigation.type === 1) {
         // Si se recarga la página, redirige al inicio
         window.location.href = "/";
@@ -84,3 +83,94 @@
 
       // observar cambios en el body
       observer.observe(document.body, { childList: true, subtree: true });
+  
+  // UPDATE
+
+  // === Variables globales para animación de puntos ===
+let dotsInterval = null;
+let dotCount = 0;
+
+function startDotsAnimation() {
+  const dots = document.getElementById("dots");
+  dotCount = 0;
+  dots.textContent = "";
+  clearInterval(dotsInterval);
+
+  dotsInterval = setInterval(() => {
+    dotCount = (dotCount + 1) % 4; // Repite 0, 1, 2, 3
+    dots.textContent = ".".repeat(dotCount);
+  }, 500); // velocidad del bucle
+}
+
+function stopDotsAnimation() {
+  clearInterval(dotsInterval);
+  document.getElementById("dots").textContent = ""; // Limpia los puntos
+}
+
+// === Barra de progreso + animación ===
+let intervalo; // Declara fuera de la función (variable global o de nivel superior)
+let progresoActivo = false;
+
+  function iniciarProgreso() {
+  if (progresoActivo) return; // 👈 evita duplicados
+  progresoActivo = true;
+  const contenedor = document.getElementById('progress-container');
+  const barra = document.getElementById('progress-bar');
+  const velocidad = document.getElementById('progress-speed');
+
+  contenedor.style.display = 'block';
+  startDotsAnimation(); // 👈 inicia los puntos
+
+  const intervalo = setInterval(() => {
+    fetch('/progress')
+      .then(r => r.json())
+      .then(data => {
+        barra.style.width = data.percent + '%';
+        barra.textContent = data.percent + '%';
+
+        // Mostrar velocidad en MB/s
+        const speedMB = (data.speed).toFixed(2);
+        velocidad.textContent = `Velocidad: ${speedMB} MB/s`;
+
+        if (data.status === 'done') {
+          stopDotsAnimation(); // 👈 detener puntos
+          clearInterval(intervalo);
+          progresoActivo = false; // 👈 libera para la próxima vez
+          barra.style.backgroundColor = '#2196F3';
+          barra.textContent = 'Completado ✅';          
+
+          // 🕒 Esperar 2 segundos y reiniciar la barra suavemente
+          setTimeout(() => {
+            barra.style.transition = 'width 1s ease, opacity 0.5s ease';
+            barra.style.opacity = '0'; // Desaparece suavemente
+            setTimeout(() => {
+              barra.style.width = '0%';
+              barra.textContent = '';
+              barra.style.opacity = '1'; // La vuelve visible lista para el siguiente proceso
+              barra.style.backgroundColor = '#4CAF50'; // Color original (opcional)
+              contenedor.style.display = 'none'; // 👈 Oculta contenedor
+            }, 1500);
+          }, 2000);
+        }
+      if (data.status === 'error') {
+          stopDotsAnimation();
+          clearInterval(intervalo);
+          barra.style.backgroundColor = '#f44336';
+          barra.textContent = 'Error ❌';
+        }
+      })
+      .catch(() => clearInterval(intervalo));
+  }, 1000);
+}
+
+fetch(`/progress?_=${Date.now()}`)
+
+if (data.status === 'done') {
+  barra.style.backgroundColor = '#2196F3';
+  barra.textContent = 'Completado';
+  clearInterval(intervalo);
+  setTimeout(() => {
+    location.reload(); // 🔄 recarga la página después de 2 segundos
+  }, 2000);
+}
+
